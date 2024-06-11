@@ -1,8 +1,17 @@
 class Warrior:
-    def __init__ (self, health, attack):
+    def __init__ (self, name, health, attack, sprite, x, y, defense = 0):
         self.health = health
         self.attack = attack
         self.is_alive = True
+        self.sprite = sprite
+        self.x = x
+        self.y = y
+        self.name = name
+        self.max_health = health
+        self.defense = defense
+
+    def reset_health(self):
+        self.health = self.max_health
     
     def get_health(self):
         return self.health
