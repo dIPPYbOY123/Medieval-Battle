@@ -43,15 +43,11 @@ def return_font(size):
 def fight(warrior_1, warrior_2):
     warrior_1.sprite = pygame.transform.scale2x(pygame.image.load(f"assets/{warrior_1.name}_punch.png"))
     
-    print(f"warrior 1 {warrior_1.name}. x: {warrior_1.x}")
-    
     if warrior_1.x == 840:
         warrior_1.sprite = pygame.transform.flip(warrior_1.sprite, True, False)
         warrior_1.x = 480
     elif warrior_1.x == 440:
         warrior_1.x = 800
-    else:
-        print('wtf', warrior_1.x)
     
     if warrior_2.defense >= warrior_1.get_attack():
         warrior_2.health -= warrior_1.get_attack()
