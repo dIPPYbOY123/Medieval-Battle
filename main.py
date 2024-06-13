@@ -1,5 +1,7 @@
 import pygame
 import sys
+import os
+# from playsound import playsound
 from Button import Button
 from Warrior import Warrior
 from Knight import Knight
@@ -13,6 +15,7 @@ SCREEN = pygame.display.set_mode((1280, 720))
 pygame.display.set_caption("Medieval Battle - Harsit + Dip")
 
 BACKGROUND = pygame.image.load("assets/background.png")
+ATTACK_SOUND = "assets\punch-140236.mp3"
 
 WARRIOR_IDLE_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/warrior_idle.png"))
 WARRIOR_PUNCH_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/warrior_punch.png"))
@@ -81,7 +84,7 @@ def fight(warrior_1, warrior_2):
                     warrior_1.x = 840
                 elif warrior_1.x == 800:
                     warrior_1.x = 440
-    
+                os.system("afplay " + ATTACK_SOUND)
                 if warrior_1.get_health() > 0 and warrior_2.get_health() <= 0:
                     return True
                 return False
