@@ -1,3 +1,12 @@
+#* ***********************************************************************
+# Dip Khadka and Harsit Baral
+# Assignment 3 - Medieval Battle
+# Block 8
+# Completed: June 12, 2024
+
+#This program is my own work - DIP KHADKA and HARSIT BARAL */
+#images and sounds downloaded from google
+
 import pygame
 import sys
 from Button import Button
