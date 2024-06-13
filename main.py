@@ -1,7 +1,5 @@
 import pygame
 import sys
-import os
-# from playsound import playsound
 from Button import Button
 from Warrior import Warrior
 from Knight import Knight
@@ -15,7 +13,11 @@ SCREEN = pygame.display.set_mode((1280, 720))
 pygame.display.set_caption("Medieval Battle - Harsit + Dip")
 
 BACKGROUND = pygame.image.load("assets/background.png")
-ATTACK_SOUND = "assets\power-punch-192118.wav"
+ATTACK_SOUND = r"assets\swoosh-sound-effect-for-fight-scenes-or-transitions-1-149889.mp3"
+GAME_OVER_SOUND = r"assets\game-over-39-199830.mp3"
+GAME_LOOP_SOUND = r"assets\game-music-loop-3-144252.mp3"
+HEAL_SOUND = r"assets\heal-up-39285.mp3"
+pygame.mixer.Channel(0).play(pygame.mixer.Sound(GAME_LOOP_SOUND), loops=-1)
 
 WARRIOR_IDLE_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/warrior_idle.png"))
 WARRIOR_PUNCH_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/warrior_punch.png"))
@@ -29,6 +31,8 @@ LANCER_IDLE_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/lancer_i
 LANCER_PUNCH_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/lancer_punch.png"))
 HEALER_IDLE_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/healer_idle.png"))
 HEALER_PUNCH_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/healer_punch.png"))
+HEALER_BEHIND_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/healer_idle.png"))
+
 
 
 initial_warriors = {
@@ -43,7 +47,7 @@ initial_warriors = {
 def return_font(size):
     return pygame.font.SysFont("Roboto", size)
 
-def fight(warrior_1, warrior_2):
+def fight(warrior_1, warrior_2, healer = None):
     warrior_1.sprite = pygame.transform.scale2x(pygame.image.load(f"assets/{warrior_1.name}_punch.png"))
     
     if warrior_1.x == 840:
@@ -60,17 +64,22 @@ def fight(warrior_1, warrior_2):
     else:
         warrior_2.set_health(warrior_2.get_health() - warrior_1.get_attack())
 
+    if healer and warrior_1.name == "warrior":
+        warrior_1.set_health(min(warrior_1.get_health() + healer.heal_amount, warrior_1.max_health))
+
     if warrior_2.get_health() <= 0:
         return True
     elif warrior_1.get_health() <= 0:
         return False
-    warrior_1_health_text = return_font(32).render(f"Warrior 1 Health: {chosen_warrior1.health}", True, "white")
-    warrior_2_health_text = return_font(32).render(f"Warrior 2 Health: {chosen_warrior2.health}", True, "white")
     
     while True:
+        warrior_1_health_text = return_font(32).render(f"Warrior 1 Health: {chosen_warrior1.health}", True, "white")
+        warrior_2_health_text = return_font(32).render(f"Warrior 2 Health: {chosen_warrior2.health}", True, "white")
         SCREEN.blit(BACKGROUND, (0, 0))
         SCREEN.blit(warrior_1.sprite, warrior_1.sprite.get_rect(center=(warrior_1.x, 500)))
         SCREEN.blit(warrior_2.sprite, warrior_2.sprite.get_rect(center=(warrior_2.x, 500)))
+        if healer:
+            SCREEN.blit(HEALER_BEHIND_SPRITE, (300, 445))
         SCREEN.blit(warrior_1_health_text, warrior_1_health_text.get_rect(center=(400, 200)))
         SCREEN.blit(warrior_2_health_text, warrior_2_health_text.get_rect(center=(800, 200)))
         SCREEN.blit(return_font(32).render(f"{chosen_warrior1.name}", True, "white"), (350, 100))
@@ -84,10 +93,12 @@ def fight(warrior_1, warrior_2):
                     warrior_1.x = 840
                 elif warrior_1.x == 800:
                     warrior_1.x = 440
-                os.system("afplay " + ATTACK_SOUND)
+                
                 if warrior_1.get_health() > 0 and warrior_2.get_health() <= 0:
                     return True
+                pygame.mixer.Channel(1).play(pygame.mixer.Sound(ATTACK_SOUND))
                 return False
+            
         pygame.display.update()
 
 def choose_warriors():    
@@ -102,6 +113,7 @@ def choose_warriors():
     choose_healer_button = Button(HEALER_IDLE_SPRITE, (1120, 200), None, return_font(40), "white", "white", "healer")
     
     warriors_chosen = 0
+    chosen_healer = None
 
     choose_warriors_buttons = [choose_warrior_button, choose_knight_button, 
                                choose_defender_button, choose_vampire_button,
@@ -117,12 +129,14 @@ def choose_warriors():
                     if button.checkForInput(pygame.mouse.get_pos()):
                         if warriors_chosen == 0:
                             warrior_1 = initial_warriors[button.warrior]
+                            if warrior_1.name == "warrior":
+                                chosen_healer = initial_warriors["healer"]
                             warriors_chosen += 1
                         elif warriors_chosen == 1:
                             warrior2 = initial_warriors[button.warrior]
                             warriors_chosen += 1
                         if warriors_chosen == 2:
-                            return warrior_1, warrior2
+                            return warrior_1, warrior2, chosen_healer
                         
         SCREEN.fill("white")
         SCREEN.blit(choose_warriors_text, choose_warriors_text_rect)
@@ -138,8 +152,8 @@ def choose_warriors():
         pygame.display.update()
     
 def resset_warriors():
-    global chosen_warrior1, chosen_warrior2, warrior_1_health_text, warrior_2_health_text, current_turn
-    chosen_warrior1, chosen_warrior2 = choose_warriors()
+    global chosen_warrior1, chosen_warrior2, chosen_healer, warrior_1_health_text, warrior_2_health_text, current_turn
+    chosen_warrior1, chosen_warrior2, chosen_healer = choose_warriors()
     
     chosen_warrior1.reset_health()
     chosen_warrior2.reset_health()
@@ -153,6 +167,8 @@ def resset_warriors():
     current_turn = 1
 
 def winner_screen(winner):
+    pygame.mixer.music.load(GAME_OVER_SOUND)
+    pygame.mixer.music.play()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -183,11 +199,13 @@ def main_game():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if current_turn == 1:
-                    if fight(chosen_warrior1, chosen_warrior2):
+                    if fight(chosen_warrior1, chosen_warrior2, chosen_healer):
                         winner_screen(chosen_warrior1)
+                    if chosen_healer:
+                        pygame.mixer.Channel(2).play(pygame.mixer.Sound(HEAL_SOUND))
                     current_turn = 2
                 elif current_turn == 2:
-                    if fight(chosen_warrior2, chosen_warrior1):
+                    if fight(chosen_warrior2, chosen_warrior1, chosen_healer):
                         winner_screen(chosen_warrior2)
                     current_turn = 1
                     
@@ -196,6 +214,8 @@ def main_game():
         chosen_warrior1.sprite = pygame.transform.scale2x(pygame.image.load(f"assets/{chosen_warrior1.name}_idle.png"))
         chosen_warrior2.sprite = pygame.transform.scale2x(pygame.image.load(f"assets/{chosen_warrior2.name}_idle.png"))
         chosen_warrior2.sprite = pygame.transform.flip(chosen_warrior2.sprite, True, False)
+        if chosen_healer:
+            SCREEN.blit(HEALER_BEHIND_SPRITE, (300, 445))
         chosen_warrior1.x = 440
         chosen_warrior2.x = 840
         SCREEN.blit(warrior_1_health_text, warrior_1_health_text.get_rect(center=(400, 200)))
