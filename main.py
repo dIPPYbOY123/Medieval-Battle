@@ -15,7 +15,7 @@ SCREEN = pygame.display.set_mode((1280, 720))
 pygame.display.set_caption("Medieval Battle - Harsit + Dip")
 
 BACKGROUND = pygame.image.load("assets/background.png")
-ATTACK_SOUND = "assets\punch-140236.mp3"
+ATTACK_SOUND = "assets\power-punch-192118.wav"
 
 WARRIOR_IDLE_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/warrior_idle.png"))
 WARRIOR_PUNCH_SPRITE = pygame.transform.scale2x(pygame.image.load("assets/warrior_punch.png"))
